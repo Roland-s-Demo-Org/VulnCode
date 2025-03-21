@@ -20,9 +20,10 @@ class Program
         using (SqlConnection conn = new SqlConnection(connectionString))
         {
             conn.Open();
-            string sqlQuery = "SELECT * FROM Users WHERE username = '" + username + "'";
+            string sqlQuery = "SELECT * FROM Users WHERE username = @username";
             using (SqlCommand cmd = new SqlCommand(sqlQuery, conn))
             {
+                cmd.Parameters.AddWithValue("@username", username);
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
