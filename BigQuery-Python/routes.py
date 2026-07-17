@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, s
 from config import Config
 from bq_client import execute_query
 from schema_validator import SchemaValidator
+from google.cloud import bigquery
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -64,13 +65,18 @@ def search_catalog():
     # )
 
     #insecure way 1
-    query = f"""
+    query = """
     SELECT * FROM `your-project-id.dataset.catalog`
-    WHERE catalog_type = {catalog_type} AND owner = {owner}
+    WHERE catalog_type = @catalog_type AND owner = @owner
     """
  
 
-    job_config = None
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("catalog_type", "STRING", catalog_type),
+            bigquery.ScalarQueryParameter("owner", "STRING", owner),
+        ]
+    )
 
     try:
         catalog_results = execute_query(query, job_config)
