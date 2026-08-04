@@ -32,10 +32,10 @@ func (c *Class2) Process() {
 	}
 
 	// Potentially unsafe operation
-	query := fmt.Sprintf("SELECT * FROM users WHERE username = '%s'", c.input)
+	query := "SELECT * FROM users WHERE username = ?"
 	fmt.Printf("Executing query: %s\n", query)
 
-	rows, err := c.db.Query(query)
+	rows, err := c.db.Query(query, c.input)
 	if err != nil {
 		fmt.Printf("Error executing query: %v\n", err)
 		return
