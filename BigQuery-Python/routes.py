@@ -1,5 +1,6 @@
 # routes.py
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from werkzeug.security import check_password_hash
 from config import Config
 from bq_client import execute_query
 from schema_validator import SchemaValidator
@@ -23,7 +24,7 @@ def login():
         password = request.form.get('password')
 
         user = Config.USERS.get(username)
-        if user and user['password'] == password:
+        if user and check_password_hash(user['password_hash'], password):
             session['username'] = username
             session['role'] = user['role']
             return redirect(url_for('home'))
