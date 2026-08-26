@@ -10,10 +10,35 @@ app.config.from_object(Config)
 # Instantiate the schema validator
 schema_validator = SchemaValidator(Config.SCHEMA_PATH)
 
+def get_user_role(username):
+    """
+    Server-side role validation: Verify the user's role from the authoritative source.
+    This prevents forged session cookies from bypassing authorization checks.
+    """
+    user = Config.USERS.get(username)
+    return user['role'] if user else None
+
+def require_role(required_role):
+    """
+    Validate that the current session user has the required role by checking
+    against the server-side user database, not just trusting the session cookie.
+    """
+    username = session.get('username')
+    if not username:
+        return False
+    
+    # Always verify role from authoritative source (Config.USERS), not from session
+    actual_role = get_user_role(username)
+    return actual_role == required_role
+
 @app.route('/')
 def home():
     if 'username' in session:
-        return render_template('index.html', role=session['role'], username=session['username'])
+        # Verify role from server-side source, not session
+        username = session['username']
+        role = get_user_role(username)
+        if role:
+            return render_template('index.html', role=role, username=username)
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -38,7 +63,8 @@ def logout():
 
 @app.route('/search', methods=['POST'])
 def search_catalog():
-    if 'username' not in session or session['role'] != 'customer':
+    # Validate role server-side against authoritative source
+    if not require_role('customer'):
         return "Unauthorized access!", 403
 
     catalog_type = request.form.get('catalog_type')
@@ -80,7 +106,8 @@ def search_catalog():
 
 @app.route('/update', methods=['POST'])
 def update_catalog():
-    if 'username' not in session or session['role'] != 'admin':
+    # Validate role server-side against authoritative source
+    if not require_role('admin'):
         return "Unauthorized access!", 403
 
     catalog_id = request.form.get('catalog_id')
