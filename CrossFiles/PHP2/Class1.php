@@ -10,7 +10,8 @@ class Class1 {
     public function process() {
         echo "Class1 processing: {$this->input}\n";
         // Potentially unsafe operation
-        system("echo " . $this->input);
+        // Security fix: escapeshellarg() wraps user input to prevent shell injection
+        system("echo " . escapeshellarg($this->input));
     }
 }
 ?>
