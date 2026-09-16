@@ -10,7 +10,10 @@ class Program
         string userInput = Console.ReadLine(); // Tainted user input
 
         // ⚠️ BAD: Directly passing user input to Process.Start (Command Injection)
-        Process.Start("cmd.exe", "/C " + userInput); 
+        var startInfo = new ProcessStartInfo("cmd.exe");
+        startInfo.ArgumentList.Add("/C");
+        startInfo.ArgumentList.Add(userInput);
+        Process.Start(startInfo); 
 
         Console.Write("Enter your username: ");
         string username = Console.ReadLine(); // Tainted user input
